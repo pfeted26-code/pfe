@@ -1,0 +1,162 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 217 19% 17%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 217 19% 17%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 217 19% 17%;
+
+    --primary: 221 68% 33%;
+    --primary-foreground: 0 0% 100%;
+    
+    --primary-light: 221 91% 60%;
+    --primary-glow: 221 91% 70%;
+
+    --secondary: 199 89% 48%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 217 19% 45%;
+
+    --accent: 158 64% 52%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 158 64% 52%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 14% 90%;
+    --input: 220 14% 90%;
+    --ring: 221 68% 33%;
+
+    --radius: 0.75rem;
+
+    --gradient-primary: linear-gradient(135deg, hsl(221 68% 33%), hsl(199 89% 48%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 14% 98%));
+    --gradient-accent: linear-gradient(135deg, hsl(158 64% 52%), hsl(199 89% 48%));
+    
+    --shadow-sm: 0 2px 8px hsl(217 19% 17% / 0.05);
+    --shadow-md: 0 4px 12px hsl(217 19% 17% / 0.08);
+    --shadow-lg: 0 8px 24px hsl(217 19% 17% / 0.12);
+    --shadow-glow: 0 0 24px hsl(221 68% 33% / 0.3);
+    
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 217 19% 17%;
+    --sidebar-primary: 221 68% 33%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 96%;
+    --sidebar-accent-foreground: 217 19% 17%;
+    --sidebar-border: 220 14% 90%;
+    --sidebar-ring: 221 68% 33%;
+  }
+
+  .dark {
+    --background: 217 19% 10%;
+    --foreground: 0 0% 98%;
+
+    --card: 217 19% 13%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 217 19% 13%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 221 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    
+    --primary-light: 221 91% 70%;
+    --primary-glow: 221 91% 75%;
+
+    --secondary: 199 89% 58%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 217 19% 20%;
+    --muted-foreground: 217 10% 65%;
+
+    --accent: 158 64% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 158 64% 60%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 65%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 217 19% 25%;
+    --input: 217 19% 25%;
+    --ring: 221 91% 60%;
+    
+    --sidebar-background: 217 19% 13%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 221 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 19% 20%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 217 19% 25%;
+    --sidebar-ring: 221 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  html {
+    @apply custom-scrollbar;
+  }
+}
+
+@layer utilities {
+  .custom-scrollbar {
+    /* Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) hsl(var(--muted) / 0.5);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--muted) / 0.5);
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-corner {
+    background: hsl(var(--muted) / 0.5);
+  }
+}
