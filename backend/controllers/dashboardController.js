@@ -58,41 +58,41 @@ exports.getDashboardStats = async (req, res) => {
       });
     }
 
-    // Class performance (average grades)
+    // Class performance (average grades) and attendance rates (parallelized)
     const classes = await Classe.find().populate('etudiants');
-    const classPerformanceData = [];
 
-    for (const classe of classes) {
+    // Parallelize notes and presences queries for all classes
+    const classPerformancePromises = classes.map(async (classe) => {
       const studentIds = classe.etudiants.map(s => s._id);
+      if (studentIds.length === 0) return null;
       const notes = await Note.find({ etudiant: { $in: studentIds } });
+      if (notes.length === 0) return null;
+      const average = notes.reduce((sum, note) => sum + note.valeur, 0) / notes.length;
+      return {
+        class: classe.nom,
+        average: Math.round(average),
+        color: `#${Math.floor(Math.random()*16777215).toString(16)}` // Random color
+      };
+    });
 
-      if (notes.length > 0) {
-        const average = notes.reduce((sum, note) => sum + note.valeur, 0) / notes.length;
-        classPerformanceData.push({
-          class: classe.nom,
-          average: Math.round(average),
-          color: `#${Math.floor(Math.random()*16777215).toString(16)}` // Random color
-        });
-      }
-    }
-
-    // Class attendance rates
-    const classAttendanceData = [];
-
-    for (const classe of classes) {
+    const classAttendancePromises = classes.map(async (classe) => {
       const studentIds = classe.etudiants.map(s => s._id);
+      if (studentIds.length === 0) return null;
       const presences = await Presence.find({ etudiant: { $in: studentIds } });
+      if (presences.length === 0) return null;
+      const presentCount = presences.filter(p => p.statut === "present").length;
+      const attendanceRate = Math.round((presentCount / presences.length) * 100);
+      return {
+        class: classe.nom,
+        attendance: attendanceRate,
+        color: `#${Math.floor(Math.random()*16777215).toString(16)}` // Random color
+      };
+    });
 
-      if (presences.length > 0) {
-        const presentCount = presences.filter(p => p.statut === "present").length;
-        const attendanceRate = Math.round((presentCount / presences.length) * 100);
-        classAttendanceData.push({
-          class: classe.nom,
-          attendance: attendanceRate,
-          color: `#${Math.floor(Math.random()*16777215).toString(16)}` // Random color
-        });
-      }
-    }
+    const classPerformanceDataRaw = await Promise.all(classPerformancePromises);
+    const classAttendanceDataRaw = await Promise.all(classAttendancePromises);
+    const classPerformanceData = classPerformanceDataRaw.filter(Boolean);
+    const classAttendanceData = classAttendanceDataRaw.filter(Boolean);
 
     // Recent announcements (last 4)
     const recentAnnouncements = await Announcement.find({ estActif: true })
