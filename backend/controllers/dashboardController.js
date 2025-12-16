@@ -15,7 +15,7 @@ const cache = new NodeCache({ stdTTL: 300 });
 exports.getDashboardStats = async (req, res) => {
   try {
     // Check cache first
-    const cacheKey = 'dashboard_stats';
+    const cacheKey = 'dashboard_stats_v2'; // Updated cache key to invalidate old data
     const cachedData = cache.get(cacheKey);
     if (cachedData) {
       return res.status(200).json(cachedData);
@@ -57,7 +57,7 @@ exports.getDashboardStats = async (req, res) => {
         $group: {
           _id: null,
           total: { $sum: 1 },
-          present: { $sum: { $cond: [{ $eq: ["$statut", "present"] }, 1, 0] } }
+          present: { $sum: { $cond: [{ $eq: ["$statut", "présent"] }, 1, 0] } }
         }
       }
     ]);
@@ -68,56 +68,35 @@ exports.getDashboardStats = async (req, res) => {
 
     const activeCourses = await Cours.countDocuments();
 
-    // Enrollment trend (last 6 months) - optimized with single aggregation
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
-    const enrollmentStats = await User.aggregate([
+    // Total enrollment (all time)
+    const totalEnrollmentStats = await User.aggregate([
       {
         $match: {
-          createdAt: { $gte: sixMonthsAgo },
           role: { $in: ["etudiant", "enseignant"] }
         }
       },
       {
         $group: {
-          _id: {
-            year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" },
-            role: "$role"
-          },
+          _id: "$role",
           count: { $sum: 1 }
         }
-      },
-      {
-        $sort: { "_id.year": 1, "_id.month": 1 }
       }
     ]);
 
-    // Process enrollment data
-    const enrollmentData = [];
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const totalStudentsEnrolled = totalEnrollmentStats.find(stat => stat._id === "etudiant")?.count || 0;
+    const totalTeachersEnrolled = totalEnrollmentStats.find(stat => stat._id === "enseignant")?.count || 0;
 
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date();
-      date.setMonth(date.getMonth() - i);
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1; // MongoDB months are 1-based
-
-      const studentsCount = enrollmentStats
-        .filter(stat => stat._id.year === year && stat._id.month === month && stat._id.role === "etudiant")
-        .reduce((sum, stat) => sum + stat.count, 0);
-
-      const teachersCount = enrollmentStats
-        .filter(stat => stat._id.year === year && stat._id.month === month && stat._id.role === "enseignant")
-        .reduce((sum, stat) => sum + stat.count, 0);
-
-      enrollmentData.push({
-        month: monthNames[month - 1],
-        students: studentsCount,
-        teachers: teachersCount,
-      });
-    }
+    // Process enrollment data as general totals
+    const enrollmentData = [
+      {
+        category: "Students",
+        count: totalStudentsEnrolled,
+      },
+      {
+        category: "Teachers",
+        count: totalTeachersEnrolled,
+      }
+    ];
 
     // Simplified class performance and attendance - get basic class list for now
     // TODO: Optimize these queries further if needed

@@ -66,8 +66,7 @@ export default function AdminDashboard() {
   const announcements = dashboardData?.announcements || [];
   const recentActivity = dashboardData?.recentActivity || [];
 
-  const maxStudents = Math.max(...enrollmentData.map((d) => d.students));
-  const maxTeachers = Math.max(...enrollmentData.map((d) => d.teachers));
+  const maxCount = Math.max(...enrollmentData.map((d) => d.count), 1);
 
   return (
     <div className="min-h-screen p-6">
@@ -134,46 +133,40 @@ export default function AdminDashboard() {
           <div className={`lg:col-span-2 rounded-2xl p-6 shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
             <div className="mb-6">
               <h3 className={`text-xl font-bold ${theme === 'dark' ? 'text-gray-100' : 'text-slate-800'}`}>
-                Enrollment Trend
+                Total Enrollment
               </h3>
               <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-300' : 'text-slate-600'}`}>
-                Students and teachers over time
+                Total students and teachers
               </p>
             </div>
-            <div className="h-64 flex items-end justify-between gap-2 px-4">
-              {enrollmentData.map((data, index) => {
-                const studentHeight = (data.students / maxStudents) * 100;
-                const teacherHeight = (data.teachers / maxTeachers) * 100;
+            <div className="h-64 flex items-end justify-center gap-8 px-4">
+              {enrollmentData.length > 0 ? enrollmentData.map((data, index) => {
+                const height = data.count > 0 ? Math.max((data.count / maxCount) * 100, 5) : 2;
+                const color = data.category === "Students" ? "from-blue-500 to-cyan-400" : "from-purple-500 to-pink-400";
                 return (
-                  <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                    <div className="w-full flex gap-1 items-end h-48">
-                      <div className="flex-1 relative group">
+                  <div key={index} className="flex flex-col items-center gap-2">
+                    <div className="w-16 flex items-end h-48">
+                      <div className="w-full relative group">
                         <div
-                          className="w-full bg-gradient-to-t from-blue-500 to-cyan-400 rounded-t-lg transition-all hover:opacity-80 cursor-pointer"
-                          style={{ height: `${studentHeight}%` }}
+                          className={`w-full bg-gradient-to-t ${color} rounded-t-lg transition-all hover:opacity-80 cursor-pointer`}
+                          style={{ height: `${height}%` }}
                         >
                           <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                            {data.students}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex-1 relative group">
-                        <div
-                          className="w-full bg-gradient-to-t from-purple-500 to-pink-400 rounded-t-lg transition-all hover:opacity-80 cursor-pointer"
-                          style={{ height: `${teacherHeight}%` }}
-                        >
-                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                            {data.teachers}
+                            {data.count}
                           </div>
                         </div>
                       </div>
                     </div>
                     <span className={`text-xs font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-slate-600'}`}>
-                      {data.month}
+                      {data.category}
                     </span>
                   </div>
                 );
-              })}
+              }) : (
+                <div className="flex items-center justify-center w-full h-full">
+                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'}`}>No enrollment data available</p>
+                </div>
+              )}
             </div>
             <div className="flex justify-center gap-6 mt-6">
               <div className="flex items-center gap-2">
@@ -330,7 +323,7 @@ export default function AdminDashboard() {
               </p>
             </div>
             <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
-              {classAttendanceData.map((data, index) => (
+              {classAttendanceData.length > 0 ? classAttendanceData.map((data, index) => (
                 <div key={index} className="group">
                   <div className="flex justify-between items-center mb-2">
                     <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-slate-700'}`}>
@@ -350,7 +343,11 @@ export default function AdminDashboard() {
                     ></div>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="flex items-center justify-center h-32">
+                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'}`}>No attendance data available</p>
+                </div>
+              )}
             </div>
           </div>
 
