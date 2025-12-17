@@ -56,6 +56,7 @@ import StudentProfile from "./pages/Student/Profile";
 import Studentannoucement from "./pages/Student/announcements";
 import StudentCourseDetails from "./pages/Student/CourseDetails";
 import StudentNotFound from "./pages/Student/NotFound";
+import ChatPage from "./pages/Student/EduBot";
 
 // Wrapper to extract courseId from URL params
 import { useParams } from "react-router-dom";
@@ -105,6 +106,7 @@ const App = () => (
                 <Route path="profile" element={<StudentProfile />} />
                 {/* ✅ Corrected relative route */}
                 <Route path="courses/:id" element={<StudentCourseDetails />} />
+                <Route path="chatbot" element={<ChatPage />} />
                 <Route path="*" element={<StudentNotFound />} />
               </Route>
 

@@ -1,0 +1,4 @@
+- [ ] Update BASE_SYSTEM_PROMPT in system.prompt.js to include rule for certification questions
+- [ ] Modify certificationPrompt in certification.prompt.js to include all certification details from the file
+- [ ] Update chat.controller.js to detect certification-related messages and load relevant cert data
+- [x] Test the changes with a certification query

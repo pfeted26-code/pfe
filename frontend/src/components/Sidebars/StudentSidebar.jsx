@@ -40,6 +40,7 @@ const navItems = [
   { path: "requests", label: "Requests", icon: Send },
   { path: "messages", label: "Messages", icon: MessageSquare },
   { path: "notifications", label: "Notifications", icon: Bell },
+  {path: "chatbot", label: "EduBot", icon: MessageSquare }
 ];
 
 export function StudentSidebar() {

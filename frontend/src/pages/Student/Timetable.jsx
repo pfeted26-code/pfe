@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { MapPin, Clock, User, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { MapPin, Clock, User, BookOpen, ChevronLeft, ChevronRight, Calendar, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -73,7 +73,8 @@ const Timetable = () => {
           setLoading(false);
           return;
         }
-
+         
+        
         // Group seances by day
         filteredSeances.forEach((seance) => {
           const day = seance.jourSemaine;
@@ -143,10 +144,17 @@ const Timetable = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading timetable...</p>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-6">
+        <div className="container mx-auto">
+          <Card className="border-0 shadow-lg">
+            <CardContent className="flex flex-col items-center justify-center py-20">
+              <div className="relative">
+                <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary/20 border-t-primary"></div>
+                <Calendar className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-primary" />
+              </div>
+              <p className="text-muted-foreground mt-6 text-lg">Loading your timetable...</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -154,164 +162,232 @@ const Timetable = () => {
 
   if (error) {
     return (
-      <div className="p-6">
-        <Card className="p-6">
-          <div className="text-center py-12">
-            <BookOpen className="h-12 w-12 mx-auto text-red-500 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Error Loading Schedule</h3>
-            <p className="text-muted-foreground mb-4">{error}</p>
-            <Button onClick={() => window.location.reload()} variant="outline">
-              Retry
-            </Button>
-          </div>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-6">
+        <div className="container mx-auto">
+          <Card className="border-0 shadow-lg border-l-4 border-l-red-500">
+            <CardContent className="py-12">
+              <div className="text-center max-w-md mx-auto">
+                <div className="h-16 w-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+                  <BookOpen className="h-8 w-8 text-red-500" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Error Loading Schedule</h3>
+                <p className="text-muted-foreground mb-6">{error}</p>
+                <Button onClick={() => window.location.reload()} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
+                  Try Again
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   const hasSchedule = Object.keys(schedule).length > 0;
+  const totalClasses = Object.values(schedule).reduce((acc, day) => acc + day.length, 0);
 
   return (
-    <div className="p-6 space-y-6">
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-6">
+      <div className="container mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold">Your Weekly Schedule</h2>
-            <p className="text-muted-foreground">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Weekly Schedule
+            </h1>
+            <p className="text-muted-foreground mt-2">
               {hasSchedule 
-                ? "Your class schedule for this week" 
+                ? `${totalClasses} classes scheduled this week` 
                 : "No schedule available"}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 bg-card border rounded-lg p-1 shadow-sm">
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
               onClick={() => setCurrentWeek(currentWeek - 1)}
+              className="h-9 w-9"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <div className="px-4 py-2 bg-muted rounded-md">
-              <p className="text-sm font-medium">Current Week</p>
-              <p className="text-xs text-muted-foreground">
-                Fall 2025 - Week {Math.abs(currentWeek) + 1}
-              </p>
+            <div className="px-4 py-2 text-center min-w-[140px]">
+              <p className="text-sm font-semibold">Week {Math.abs(currentWeek) + 1}</p>
+              <p className="text-xs text-muted-foreground">Fall 2025</p>
             </div>
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
               onClick={() => setCurrentWeek(currentWeek + 1)}
+              className="h-9 w-9"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        {!hasSchedule ? (
-          <div className="text-center py-12 border rounded-lg">
-            <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Schedule Available</h3>
-            <p className="text-muted-foreground">
-              No seances found. Please check the console for details.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-7 gap-4">
-            {days.map((day, index) => (
-              <div key={day} className="space-y-2">
-                <div
-                  className={`text-center p-3 rounded-lg font-semibold ${
-                    index === getTodayIndex()
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
-                  }`}
-                >
-                  {day}
+        {/* Main Schedule Card */}
+        <Card className="border-0 shadow-lg">
+          <CardContent className="p-6">
+            {!hasSchedule ? (
+              <div className="text-center py-16">
+                <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                  <BookOpen className="h-10 w-10 text-muted-foreground" />
                 </div>
-                <div className="space-y-2 min-h-[400px]">
-                  {schedule[day] && schedule[day].length > 0 ? (
-                    schedule[day].map((session, idx) => (
-                      <div
-                        key={`${session.seanceId}-${idx}`}
-                        className={`p-3 rounded-lg bg-gradient-to-br ${getCellClass(
-                          session.course
-                        )} cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all border-l-4`}
-                        onClick={() => setSelectedCourse(session)}
-                      >
-                        <p className="font-bold text-sm text-white mb-2">
-                          {session.course}
-                        </p>
-                        
-                        <div className="flex items-center gap-1 mb-1">
-                          <Clock className="h-3 w-3 text-white/90" />
-                          <p className="text-xs text-white/90 font-medium">
-                            {session.heureDebut} - {session.heureFin}
-                          </p>
-                        </div>
-
-                        <div className="flex items-center gap-1 mb-2">
-                          <MapPin className="h-3 w-3 text-white/90" />
-                          <p className="text-xs text-white/90">{session.room}</p>
-                        </div>
-
-                        <Badge variant="secondary" className="text-xs">
-                          {session.type}
-                        </Badge>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground text-sm">
-                      No classes
-                    </div>
-                  )}
-                </div>
+                <h3 className="text-xl font-semibold mb-2">No Schedule Available</h3>
+                <p className="text-muted-foreground max-w-md mx-auto">
+                  No classes found for this week. Please check back later or contact your administrator.
+                </p>
               </div>
-            ))}
-          </div>
-        )}
-      </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+                {days.map((day, index) => {
+                  const isToday = index === getTodayIndex();
+                  const dayClasses = schedule[day] || [];
+                  
+                  return (
+                    <div key={day} className="space-y-3">
+                      {/* Day Header */}
+                      <div
+                        className={`text-center p-3 rounded-xl font-semibold transition-all ${
+                          isToday
+                            ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
+                            : "bg-muted hover:bg-muted/80"
+                        }`}
+                      >
+                        <div className="text-sm">{day}</div>
+                        {isToday && (
+                          <div className="text-xs mt-1 opacity-90">Today</div>
+                        )}
+                      </div>
 
+                      {/* Day Classes */}
+                      <div className="space-y-3 min-h-[500px]">
+                        {dayClasses.length > 0 ? (
+                          dayClasses.map((session, idx) => (
+                            <div
+                              key={`${session.seanceId}-${idx}`}
+                              className={`group relative p-4 rounded-xl bg-gradient-to-br ${getCellClass(
+                                session.course
+                              )} cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-300 border-l-4 overflow-hidden`}
+                              onClick={() => setSelectedCourse(session)}
+                            >
+                              {/* Hover overlay */}
+                              <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors rounded-xl"></div>
+                              
+                              <div className="relative z-10">
+                                <p className="font-bold text-sm text-white mb-3 leading-tight pr-6">
+                                  {session.course}
+                                </p>
+                                
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <div className="h-6 w-6 rounded-md bg-white/20 flex items-center justify-center flex-shrink-0">
+                                      <Clock className="h-3 w-3 text-white" />
+                                    </div>
+                                    <p className="text-xs text-white font-medium">
+                                      {session.heureDebut} - {session.heureFin}
+                                    </p>
+                                  </div>
+
+                                  <div className="flex items-center gap-2">
+                                    <div className="h-6 w-6 rounded-md bg-white/20 flex items-center justify-center flex-shrink-0">
+                                      <MapPin className="h-3 w-3 text-white" />
+                                    </div>
+                                    <p className="text-xs text-white">{session.room}</p>
+                                  </div>
+                                </div>
+
+                                <div className="mt-3 pt-3 border-t border-white/20">
+                                  <Badge variant="secondary" className="text-xs bg-white/90 hover:bg-white text-gray-900">
+                                    {session.type}
+                                  </Badge>
+                                </div>
+
+                                {/* Info icon */}
+                                <div className="absolute top-3 right-3 h-6 w-6 rounded-full bg-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Info className="h-3 w-3 text-white" />
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="flex items-center justify-center h-32 border-2 border-dashed border-muted rounded-xl">
+                            <p className="text-sm text-muted-foreground">No classes</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Course Details Dialog */}
       <Dialog open={!!selectedCourse} onOpenChange={() => setSelectedCourse(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-xl">{selectedCourse?.course}</DialogTitle>
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              {selectedCourse?.course}
+            </DialogTitle>
           </DialogHeader>
           {selectedCourse && (
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <User className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Instructor</p>
-                  <p className="text-base">{selectedCourse.instructor}</p>
+            <div className="space-y-4 mt-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                  <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                    <User className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground">Instructor</p>
+                    <p className="text-base font-semibold mt-1">{selectedCourse.instructor}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                  <div className="h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                    <MapPin className="h-5 w-5 text-purple-500" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground">Location</p>
+                    <p className="text-base font-semibold mt-1">{selectedCourse.room}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                  <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                    <Clock className="h-5 w-5 text-green-500" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground">Schedule</p>
+                    <p className="text-base font-semibold mt-1">
+                      {selectedCourse.heureDebut} - {selectedCourse.heureFin}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                  <div className="h-10 w-10 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+                    <BookOpen className="h-5 w-5 text-orange-500" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground">Type</p>
+                    <p className="text-base font-semibold mt-1">{selectedCourse.type}</p>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Room</p>
-                  <p className="text-base">{selectedCourse.room}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <BookOpen className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Type</p>
-                  <p className="text-base">{selectedCourse.type}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Schedule</p>
-                  <p className="text-base">
-                    {selectedCourse.heureDebut} - {selectedCourse.heureFin}
-                  </p>
-                </div>
-              </div>
+
               {selectedCourse.notes && (
                 <div className="pt-4 border-t">
-                  <p className="text-sm font-medium mb-2">Notes</p>
-                  <p className="text-sm text-muted-foreground">{selectedCourse.notes}</p>
+                  <p className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <Info className="h-4 w-4" />
+                    Additional Notes
+                  </p>
+                  <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                    {selectedCourse.notes}
+                  </p>
                 </div>
               )}
             </div>

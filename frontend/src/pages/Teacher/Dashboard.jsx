@@ -1,117 +1,113 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { getDashboardStats } from '@/services/dashboardService';
+import { getSeancesByEnseignant } from '@/services/seanceService';
+import { getNotificationsByUser } from '@/services/notificationService';
+import { ROUTES } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, BookOpen, ClipboardCheck, BarChart3, LogOut, Bell, Search, Calendar, TrendingUp, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 
+
 export default function TeacherDashboard() {
   const [selectedClass, setSelectedClass] = useState(null);
+  const [stats, setStats] = useState([]);
+  const [todayClasses, setTodayClasses] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-  const stats = [
-    { 
-      title: 'My Courses', 
-      value: '5', 
-      change: '+1 this semester',
-      icon: BookOpen, 
-      color: 'from-blue-500 to-cyan-500',
-      bgColor: 'bg-blue-500/10',
-      iconColor: 'text-blue-500'
-    },
-    { 
-      title: 'Total Students', 
-      value: '124', 
-      change: '+8 from last term',
-      icon: Users, 
-      color: 'from-purple-500 to-pink-500',
-      bgColor: 'bg-purple-500/10',
-      iconColor: 'text-purple-500'
-    },
-    { 
-      title: 'Pending Grades', 
-      value: '23', 
-      change: '4 due this week',
-      icon: ClipboardCheck, 
-      color: 'from-orange-500 to-red-500',
-      bgColor: 'bg-orange-500/10',
-      iconColor: 'text-orange-500'
-    },
-    { 
-      title: 'Avg Attendance', 
-      value: '92%', 
-      change: '+3% from last month',
-      icon: TrendingUp, 
-      color: 'from-green-500 to-emerald-500',
-      bgColor: 'bg-green-500/10',
-      iconColor: 'text-green-500'
-    },
-  ];
-
-  const todayClasses = [
-    { 
-      id: 1,
-      time: '09:00 AM', 
-      endTime: '10:30 AM',
-      course: 'Mathematics 101', 
-      room: 'Room 301', 
-      students: 30,
-      attendanceTaken: true,
-      status: 'completed'
-    },
-    { 
-      id: 2,
-      time: '11:00 AM', 
-      endTime: '12:30 PM',
-      course: 'Algebra II', 
-      room: 'Room 205', 
-      students: 25,
-      attendanceTaken: false,
-      status: 'upcoming'
-    },
-    { 
-      id: 3,
-      time: '02:00 PM', 
-      endTime: '03:30 PM',
-      course: 'Calculus I', 
-      room: 'Room 402', 
-      students: 28,
-      attendanceTaken: false,
-      status: 'upcoming'
-    },
-  ];
-
-  const recentActivity = [
-    { type: 'submission', student: 'Sarah Johnson', action: 'submitted Assignment 5', time: '2 hours ago', icon: ClipboardCheck },
-    { type: 'question', student: 'Michael Chen', action: 'asked a question in Math 101', time: '4 hours ago', icon: AlertCircle },
-    { type: 'grade', student: 'Emma Davis', action: 'achieved 95% on Quiz 3', time: '5 hours ago', icon: TrendingUp },
-  ];
-
+  // Quick actions (counts will be dynamic if possible)
   const teacherActions = [
-    { 
-      title: 'Grade Assignments', 
-      description: 'Review and grade pending submissions', 
-      icon: ClipboardCheck, 
+    {
+      title: 'Grade Assignments',
+      description: 'Review and grade pending submissions',
+      icon: ClipboardCheck,
       color: 'from-orange-500 to-red-500',
-      count: 23
+      // count: dynamic below
     },
-    { 
-      title: 'Take Attendance', 
-      description: 'Mark attendance for today\'s classes', 
-      icon: Users, 
+    {
+      title: 'Take Attendance',
+      description: 'Mark attendance for today\'s classes',
+      icon: Users,
       color: 'from-blue-500 to-cyan-500',
-      count: 2
+      // count: dynamic below
     },
-    { 
-      title: 'View Students', 
-      description: 'Manage student information and progress', 
-      icon: Users, 
-      color: 'from-purple-500 to-pink-500'
+    {
+      title: 'View Students',
+      description: 'Manage student information and progress',
+      icon: Users,
+      color: 'from-purple-500 to-pink-500',
     },
-    { 
-      title: 'My Schedule', 
-      description: 'View weekly teaching schedule', 
-      icon: Calendar, 
-      color: 'from-green-500 to-emerald-500'
+    {
+      title: 'My Schedule',
+      description: 'View weekly teaching schedule',
+      icon: Calendar,
+      color: 'from-green-500 to-emerald-500',
     },
   ];
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      setError(null);
+      try {
+        // Dashboard stats and activity
+        const dashboard = await getDashboardStats();
+        setStats(dashboard.stats?.map((stat) => {
+          // Map icon string to Lucide icon if possible
+          let icon = BookOpen;
+          if (stat.title?.toLowerCase().includes('student')) icon = Users;
+          if (stat.title?.toLowerCase().includes('teacher')) icon = Users;
+          if (stat.title?.toLowerCase().includes('attendance')) icon = TrendingUp;
+          if (stat.title?.toLowerCase().includes('course')) icon = BookOpen;
+          return {
+            ...stat,
+            icon,
+            bgColor: stat.color?.includes('blue') ? 'bg-blue-500/10' : stat.color?.includes('purple') ? 'bg-purple-500/10' : stat.color?.includes('orange') ? 'bg-orange-500/10' : 'bg-green-500/10',
+            iconColor: stat.color?.includes('blue') ? 'text-blue-500' : stat.color?.includes('purple') ? 'text-purple-500' : stat.color?.includes('orange') ? 'text-orange-500' : 'text-green-500',
+          };
+        }) || []);
+        setRecentActivity(dashboard.recentActivity?.map((a) => ({
+          ...a,
+          student: a.user || '',
+          action: a.action,
+          time: a.time,
+          icon: a.action?.toLowerCase().includes('grade') ? TrendingUp : a.action?.toLowerCase().includes('assignment') ? ClipboardCheck : a.action?.toLowerCase().includes('question') ? AlertCircle : Bell,
+        })) || []);
+
+        // Today’s classes for this teacher
+        if (user?._id) {
+          const seances = await getSeancesByEnseignant(user._id);
+          // Filter for today’s date
+          const today = new Date();
+          const todayStr = today.toISOString().slice(0, 10);
+          const todaySeances = (seances || []).filter(s => s.date && s.date.slice(0, 10) === todayStr);
+          setTodayClasses(todaySeances.map((s, idx) => ({
+            id: s._id || idx,
+            time: s.heureDebut ? s.heureDebut.slice(0,5) : '',
+            endTime: s.heureFin ? s.heureFin.slice(0,5) : '',
+            course: s.cours?.nom || s.cours || 'Course',
+            room: s.salle || 'Room',
+            students: s.classe?.etudiants?.length || 0,
+            attendanceTaken: s.presenceTaken || false,
+            status: s.heureDebut && new Date(todayStr + 'T' + s.heureDebut) < today ? 'completed' : 'upcoming',
+          })));
+          // Notification count
+          const notifications = await getNotificationsByUser(user._id);
+          setNotificationCount(Array.isArray(notifications) ? notifications.filter(n => !n.lu).length : 0);
+        }
+      } catch (err) {
+        setError('Failed to load dashboard data.');
+      }
+      setLoading(false);
+    }
+    fetchData();
+  }, [user]);
 
   const getStatusBadge = (status) => {
     if (status === 'completed') {
@@ -130,6 +126,19 @@ export default function TeacherDashboard() {
     );
   };
 
+  // Button handlers
+  const handleLogout = () => {
+    logout();
+    navigate(ROUTES.LOGIN);
+  };
+  const handleViewSchedule = () => navigate(ROUTES.TEACHER_SCHEDULE);
+  const handleTakeAttendance = () => navigate(ROUTES.TEACHER_ATTENDANCE);
+  const handleViewStudents = () => navigate(ROUTES.TEACHER_STUDENTS);
+  const handleGradeAssignments = () => navigate(ROUTES.TEACHER_GRADING);
+
+  if (loading) return <div className="p-8 text-center text-lg">Loading dashboard...</div>;
+  if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-6">
       <div className="container mx-auto space-y-6">
@@ -140,22 +149,24 @@ export default function TeacherDashboard() {
               Teacher Dashboard
             </h1>
             <p className="text-slate-600 dark:text-slate-400 mt-2 flex items-center gap-2">
-              <span className="text-lg">Welcome back, Professor Anderson</span>
+              <span className="text-lg">Welcome back, {user?.prenom || user?.nom ? `${user?.prenom} ${user?.nom}` : 'Professor'}</span>
               <span className="text-sm text-slate-400 dark:text-slate-600">•</span>
-              <span className="text-sm text-slate-500 dark:text-slate-500">Wednesday, Dec 17, 2025</span>
+              <span className="text-sm text-slate-500 dark:text-slate-500">{new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' })}</span>
             </p>
           </div>
           <div className="flex items-center gap-3">
             <Button variant="outline" size="icon" className="relative">
               <Bell className="h-4 w-4" />
-              <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                3
-              </span>
+              {notificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                  {notificationCount}
+                </span>
+              )}
             </Button>
             <Button variant="outline" size="icon">
               <Search className="h-4 w-4" />
             </Button>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2" onClick={handleLogout}>
               <LogOut className="h-4 w-4" />
               Logout
             </Button>
@@ -198,7 +209,7 @@ export default function TeacherDashboard() {
                     <CardTitle className="text-2xl">Today's Classes</CardTitle>
                     <CardDescription className="mt-1">Your teaching schedule for today</CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button variant="outline" size="sm" className="gap-2" onClick={handleViewSchedule}>
                     <Calendar className="h-4 w-4" />
                     View Full Schedule
                   </Button>
@@ -206,7 +217,9 @@ export default function TeacherDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {todayClasses.map((cls) => (
+                  {todayClasses.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-8">No classes scheduled for today.</div>
+                  ) : todayClasses.map((cls) => (
                     <div 
                       key={cls.id} 
                       className={`p-4 rounded-xl transition-all duration-300 border-2 ${
@@ -220,8 +233,8 @@ export default function TeacherDashboard() {
                         <div className="flex items-center gap-4 flex-1">
                           <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
                             <div className="text-center">
-                              <div className="text-white font-bold text-sm">{cls.time.split(':')[0]}</div>
-                              <div className="text-white text-xs opacity-90">{cls.time.split(' ')[1]}</div>
+                              <div className="text-white font-bold text-sm">{cls.time}</div>
+                              <div className="text-white text-xs opacity-90">{cls.endTime}</div>
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
@@ -248,6 +261,7 @@ export default function TeacherDashboard() {
                           variant={cls.attendanceTaken ? "outline" : "default"} 
                           size="sm"
                           className={cls.attendanceTaken ? "" : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"}
+                          onClick={handleTakeAttendance}
                         >
                           {cls.attendanceTaken ? (
                             <>
@@ -275,7 +289,9 @@ export default function TeacherDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentActivity.map((activity, index) => (
+                  {recentActivity.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-8">No recent activity.</div>
+                  ) : recentActivity.map((activity, index) => (
                     <div key={index} className="flex items-start gap-3 pb-4 border-b border-border last:border-b-0 last:pb-0">
                       <div className="h-10 w-10 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center flex-shrink-0">
                         <activity.icon className="h-5 w-5 text-blue-500 dark:text-blue-400" />
@@ -297,33 +313,68 @@ export default function TeacherDashboard() {
         <div>
           <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {teacherActions.map((action, index) => (
-              <Card
-                key={index}
-                className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group relative overflow-hidden"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-0 group-hover:opacity-10 transition-opacity`}></div>
-                <CardContent className="pt-6">
-                  <div className="flex flex-col items-center text-center space-y-3">
-                    <div className={`h-16 w-16 rounded-2xl bg-gradient-to-br ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg relative`}>
-                      <action.icon className="h-8 w-8 text-white" />
-                      {action.count && (
-                        <span className="absolute -top-2 -right-2 h-6 w-6 bg-red-500 rounded-full text-xs text-white flex items-center justify-center font-bold shadow-lg">
-                          {action.count}
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">{action.title}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{action.description}</p>
-                    </div>
+            {/* Quick Actions with dynamic counts and handlers */}
+            <Card className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group relative overflow-hidden" onClick={handleGradeAssignments}>
+              <div className={`absolute inset-0 bg-gradient-to-br from-orange-500 to-red-500 opacity-0 group-hover:opacity-10 transition-opacity`}></div>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className={`h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg relative`}>
+                    <ClipboardCheck className="h-8 w-8 text-white" />
+                    {/* Example: Pending grades count (mocked as 0) */}
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                  <div>
+                    <h3 className="font-semibold text-lg">Grade Assignments</h3>
+                    <p className="text-sm text-muted-foreground mt-1">Review and grade pending submissions</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group relative overflow-hidden" onClick={handleTakeAttendance}>
+              <div className={`absolute inset-0 bg-gradient-to-br from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-10 transition-opacity`}></div>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className={`h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg relative`}>
+                    <Users className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Take Attendance</h3>
+                    <p className="text-sm text-muted-foreground mt-1">Mark attendance for today's classes</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group relative overflow-hidden" onClick={handleViewStudents}>
+              <div className={`absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 opacity-0 group-hover:opacity-10 transition-opacity`}></div>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className={`h-16 w-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg relative`}>
+                    <Users className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">View Students</h3>
+                    <p className="text-sm text-muted-foreground mt-1">Manage student information and progress</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group relative overflow-hidden" onClick={handleViewSchedule}>
+              <div className={`absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-500 opacity-0 group-hover:opacity-10 transition-opacity`}></div>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className={`h-16 w-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg relative`}>
+                    <Calendar className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">My Schedule</h3>
+                    <p className="text-sm text-muted-foreground mt-1">View weekly teaching schedule</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
           </div>
         </div>
       </div>
-    </div>
   );
 }
+  
